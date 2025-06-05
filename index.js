@@ -32,20 +32,20 @@ const startServer = () => {
 
     try {
       if (req.method === 'POST' && path === '/login') {
-        const { email, password } = await parseBody(req);
-        const lowerEmail = (email || '').toLowerCase().trim();
+        const { username, password } = await parseBody(req);
+        const lowerUsername = (username || '').toLowerCase().trim();
         const trimmedPassword = (password || '').trim();
 
         const result = await pool.query(
           'SELECT account_id AS id, full_name AS name FROM accounts WHERE LOWER(username) = $1 AND password = $2',
-          [lowerEmail, trimmedPassword]
+          [lowerUsername, trimmedPassword]
         );
         console.log(`✅ result.rows.length: ${result.rows.length}`);
         if (result.rows.length > 0) {
           const user = result.rows[0];
           return res.end(JSON.stringify({ success: true, ...user }));
         } else {
-          return res.end(JSON.stringify({ success: false, error: 'Email hoặc mật khẩu không đúng' }));
+          return res.end(JSON.stringify({ success: false, error: 'Username hoặc mật khẩu không đúng' }));
         }
       }
 
