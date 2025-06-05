@@ -37,10 +37,6 @@ const server = http.createServer(async (req, res) => {
         'SELECT id, name FROM employee WHERE LOWER(email) = $1 AND password = $2',
         [lowerEmail, trimmedPassword]
       );
-      console.log("👉 Raw body:", await parseBody(req));
-      console.log("✅ Email:", lowerEmail);
-      console.log("✅ Password:", trimmedPassword);
-      console.log("👉 SQL query inputs:", [lowerEmail, trimmedPassword]);
 
       if (result.rows.length > 0) {
         const user = result.rows[0];
