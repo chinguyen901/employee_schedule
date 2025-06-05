@@ -35,7 +35,7 @@ const server = http.createServer(async (req, res) => {
       const trimmedPassword = (password || '').trim();
 
       const result = await pool.query(
-        'SELECT id, username FROM account WHERE LOWER(email) = $1 AND password = $2',
+        'SELECT id, username FROM employee WHERE LOWER(email) = $1 AND password = $2',
         [lowerEmail, trimmedPassword]
       );
 
