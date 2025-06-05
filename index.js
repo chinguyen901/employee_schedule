@@ -32,18 +32,29 @@ app.post("/api", async (req, res) => {
       case "login":
         const lowerEmail = (data.email || "").toLowerCase().trim();
         const trimmedPassword = (data.password || "").trim();
-        console.log("email:", lowerEmail);
-        console.log("trimmedPassword:", trimmedPassword);
-        const result = await pool.query(
-          "SELECT id, name, email FROM employee WHERE LOWER(email) = $1 AND password = $2 LIMIT 1",
-          [lowerEmail, trimmedPassword]
-        );
-        console.log("result:", result);
-        if (result.rows.length > 0) {
-          const user = result.rows[0];
-          return res.json({ success: true, ...user });
-        } else {
-          return res.json({ success: false, error: "Email hoặc mật khẩu không đúng" });
+      
+        console.log("📩 Nhận login với:");
+        console.log("   📧 Email:", lowerEmail);
+        console.log("   🔑 Password:", trimmedPassword);
+      
+        try {
+          const result = await pool.query(
+            "SELECT id, name, email FROM employee WHERE LOWER(email) = $1 AND password = $2 LIMIT 1",
+            [lowerEmail, trimmedPassword]
+          );
+          console.log("📦 Kết quả DB:", result.rows);
+      
+          if (result.rows.length > 0) {
+            const user = result.rows[0];
+            console.log("✅ Đăng nhập thành công:", user);
+            return res.json({ success: true, ...user });
+          } else {
+            console.log("❌ Không tìm thấy user trong DB");
+            return res.json({ success: false, error: "Email hoặc mật khẩu không đúng" });
+          }
+        } catch (err) {
+          console.error("❌ Lỗi truy vấn DB:", err.message);
+          return res.status(500).json({ success: false, error: err.message });
         }
       case "logEvent":
         await pool.query(
