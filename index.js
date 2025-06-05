@@ -128,6 +128,7 @@ app.post("/api", async (req, res) => {
 const createTables = async () => {
   try {
     console.log("🔧 Đang tạo các bảng...");
+ 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS employee (
         id SERIAL PRIMARY KEY,
@@ -135,7 +136,9 @@ const createTables = async () => {
         email TEXT UNIQUE,
         password TEXT
       );
-
+    `);
+ 
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS events (
         id TEXT,
         session_id TEXT,
@@ -145,7 +148,9 @@ const createTables = async () => {
         timestamp TIMESTAMP,
         type TEXT
       );
-
+    `);
+ 
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS session (
         session_id TEXT,
         email TEXT,
@@ -154,7 +159,9 @@ const createTables = async () => {
         session_status TEXT,
         device_info TEXT
       );
-
+    `);
+ 
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS log (
         id TEXT,
         name TEXT,
@@ -163,6 +170,7 @@ const createTables = async () => {
         timestamp TIMESTAMP
       );
     `);
+ 
     console.log("✅ Tạo bảng thành công!");
   } catch (err) {
     console.error("❌ Lỗi tạo bảng:", err.message);
