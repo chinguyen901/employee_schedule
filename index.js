@@ -2,6 +2,7 @@
 
 // Load các module cần thiết
 const express = require("express");
+const http = require("http");
 const bodyParser = require("body-parser");
 const { Pool } = require("pg");
 const cors = require("cors");
@@ -20,111 +21,177 @@ const pool = new Pool({
 });
 
 // ========= ✅ POST: Các hành động Login logEvent, logSession =========
-app.post("/api", async (req, res) => {
-  const { action, data } = req.body;
-  console.log("HELLO TAO VO ROI");
-  if (!action || !data) {
-    return res.status(400).json({ success: false, error: "Thiếu 'action' hoặc 'data'" });
+const server = http.createServer((req, res) => {
+  if (req.method === "OPTIONS") {
+    res.writeHead(200, {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    });
+    return res.end();
   }
-
-  try {
-    switch (action) {
-      case "login":
-        const lowerEmail = (data.email || "").toLowerCase().trim();
-        const trimmedPassword = (data.password || "").trim();
-      
-        console.log("📩 Nhận login với:");
-        console.log("   📧 Email:", lowerEmail);
-        console.log("   🔑 Password:", trimmedPassword);
-      
+    if (req.method === "POST" && req.url === "/login") {
+        let body = "";
+        req.on("data", (chunk) => (body += chunk));
+        req.on("end", async () => {
         try {
-          const result = await pool.query(
+            const { email, password } = JSON.parse(body);
+            const result = await pool.query(
             "SELECT id, name, email FROM employee WHERE LOWER(email) = $1 AND password = $2 LIMIT 1",
-            [lowerEmail, trimmedPassword]
-          );
-          console.log("📦 Kết quả DB:", result.rows);
-      
-          if (result.rows.length > 0) {
+            [email.toLowerCase().trim(), password.trim()]
+            );
+
+            if (result.rows.length > 0) {
             const user = result.rows[0];
-            console.log("✅ Đăng nhập thành công:", user);
-            return res.json({ success: true, ...user });
-          } else {
-            console.log("❌ Không tìm thấy user trong DB");
-            return res.json({ success: false, error: "Email hoặc mật khẩu không đúng" });
-          }
+            res.writeHead(200, {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            });
+            res.end(JSON.stringify({ success: true, ...user }));
+            } else {
+            res.writeHead(401, {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            });
+            res.end(JSON.stringify({ success: false, error: "Invalid credentials" }));
+            }
         } catch (err) {
-          console.error("❌ Lỗi truy vấn DB:", err.message);
-          return res.status(500).json({ success: false, error: err.message });
+            console.error("❌ Login error:", err.message);
+            res.writeHead(500, { "Access-Control-Allow-Origin": "*" });
+            res.end(JSON.stringify({ success: false, error: "Server error" }));
         }
-      case "logEvent":
-        await pool.query(
-          `INSERT INTO events (id, session_id, event_type, event_status, source, timestamp, type)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [
-            data.id || "unknown",
-            data.session_id || "no-session",
-            data.event_type || "unknown",
-            data.event_status || "unknown",
-            data.source || "unknown",
-            data.timestamp || new Date().toISOString(),
-            data.type || ""
-          ]
-        );
-        break;
-
-      case "logSession":
-        await pool.query(
-          `INSERT INTO session (session_id, email, start_time, end_time, session_status, device_info)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            data.session_id || "unknown",
-            data.email || "unknown",
-            data.start_time || new Date().toISOString(),
-            data.end_time || "",
-            data.session_status || "active",
-            data.device_info || ""
-          ]
-        );
-        break;
-
-      case "logSession_out":
-        await pool.query(
-          `INSERT INTO session (session_id, email, start_time, end_time, session_status, device_info)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            data.session_id || "unknown",
-            data.email || "unknown",
-            data.start_time || "",
-            data.end_time || new Date().toISOString(),
-            data.session_status || "active",
-            data.device_info || ""
-          ]
-        );
-        break;
-
-      case "logScreenshot":
-        await pool.query(
-          `INSERT INTO log (id, name, hash, session_id, timestamp)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [
-            data.id || "",
-            data.name || "",
-            data.hash || "",
-            data.session_id || "",
-            data.timestamp || new Date().toISOString()
-          ]
-        );
-        break;
-
-      default:
-        return res.status(400).json({ success: false, error: "Invalid POST action: " + action });
+        });
     }
 
-    return res.json({ success: true });
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
+    else if (req.method === "POST" && req.url === "/logEvent") {
+        let body = "";
+        req.on("data", (chunk) => (body += chunk));
+        req.on("end", async () => {
+        try {
+            const data = JSON.parse(body);
+            await pool.query(
+            `INSERT INTO events (id, session_id, event_type, event_status, source, timestamp, type)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [
+                data.id || "unknown",
+                data.session_id || "no-session",
+                data.event_type || "unknown",
+                data.event_status || "unknown",
+                data.source || "unknown",
+                data.timestamp || new Date().toISOString(),
+                data.type || "",
+            ]
+            );
+            res.writeHead(200, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            });
+            res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+            console.error("❌ logEvent error:", err.message);
+            res.writeHead(500, { "Access-Control-Allow-Origin": "*" });
+            res.end(JSON.stringify({ success: false, error: "Server error" }));
+        }
+        });
+    }
+
+    else if (req.method === "POST" && req.url === "/logSession") {
+        let body = "";
+        req.on("data", (chunk) => (body += chunk));
+        req.on("end", async () => {
+        try {
+            const data = JSON.parse(body);
+            await pool.query(
+            `INSERT INTO session (session_id, email, start_time, end_time, session_status, device_info)
+            VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                data.session_id || "unknown",
+                data.email || "unknown",
+                data.start_time || new Date().toISOString(),
+                data.end_time || "",
+                data.session_status || "active",
+                data.device_info || "",
+            ]
+            );
+            res.writeHead(200, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            });
+            res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+            console.error("❌ logSession error:", err.message);
+            res.writeHead(500, { "Access-Control-Allow-Origin": "*" });
+            res.end(JSON.stringify({ success: false, error: "Server error" }));
+        }
+        });
+    }
+
+    else if (req.method === "POST" && req.url === "/logSession_out") {
+        let body = "";
+        req.on("data", (chunk) => (body += chunk));
+        req.on("end", async () => {
+        try {
+            const data = JSON.parse(body);
+            await pool.query(
+            `INSERT INTO session (session_id, email, start_time, end_time, session_status, device_info)
+            VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+                data.session_id || "unknown",
+                data.email || "unknown",
+                data.start_time || "",
+                data.end_time || new Date().toISOString(),
+                data.session_status || "active",
+                data.device_info || "",
+            ]
+            );
+            res.writeHead(200, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            });
+            res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+            console.error("❌ logSession_out error:", err.message);
+            res.writeHead(500, { "Access-Control-Allow-Origin": "*" });
+            res.end(JSON.stringify({ success: false, error: "Server error" }));
+        }
+        });
+    }
+
+    else if (req.method === "POST" && req.url === "/logScreenshot") {
+        let body = "";
+        req.on("data", (chunk) => (body += chunk));
+        req.on("end", async () => {
+        try {
+            const data = JSON.parse(body);
+            await pool.query(
+            `INSERT INTO log (id, name, hash, session_id, timestamp)
+            VALUES ($1, $2, $3, $4, $5)`,
+            [
+                data.id || "",
+                data.name || "",
+                data.hash || "",
+                data.session_id || "",
+                data.timestamp || new Date().toISOString(),
+            ]
+            );
+            res.writeHead(200, {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            });
+            res.end(JSON.stringify({ success: true }));
+        } catch (err) {
+            console.error("❌ logScreenshot error:", err.message);
+            res.writeHead(500, { "Access-Control-Allow-Origin": "*" });
+            res.end(JSON.stringify({ success: false, error: "Server error" }));
+        }
+        });
+    }
+
+    else {
+        res.writeHead(404, { "Access-Control-Allow-Origin": "*" });
+        res.end("Not Found");
+    }
+    });
 const createTables = async () => {
   try {
     console.log("🔧 Đang tạo các bảng...");
