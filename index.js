@@ -33,12 +33,14 @@ const server = http.createServer(async (req, res) => {
       const { email, password } = await parseBody(req);
       const lowerEmail = (email || '').toLowerCase().trim();
       const trimmedPassword = (password || '').trim();
-      console.log(`✅ Email:${lowerEmail}`);
-      console.log(`✅ Password:${trimmedPassword}`);
       const result = await pool.query(
         'SELECT id, name FROM employee WHERE LOWER(email) = $1 AND password = $2',
         [lowerEmail, trimmedPassword]
       );
+      console.log("👉 Raw body:", await parseBody(req));
+      console.log("✅ Email:", lowerEmail);
+      console.log("✅ Password:", trimmedPassword);
+      console.log("👉 SQL query inputs:", [lowerEmail, trimmedPassword]);
 
       if (result.rows.length > 0) {
         const user = result.rows[0];
