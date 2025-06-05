@@ -69,7 +69,7 @@ const startServer = () => {
         await pool.query(
           `INSERT INTO incident_sessions (account_id, status, reason, created_at)
            VALUES ($1, $2, $3, $4)`,
-          [data.account_id, data.event_type || 'unknown', data.event_status || '', new Date()]
+          [data.account_id, data.status || 'unknown', data.reason || '', new Date()]
         );
         return res.end(JSON.stringify({ success: true }));
       }
