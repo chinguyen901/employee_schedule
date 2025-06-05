@@ -19,35 +19,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false } // Railway yêu cầu SSL
 });
 
-// ========= ✅ GET: Login bằng email và password =========
-app.get("/api", async (req, res) => {
-  const { action, email, password } = req.query;
-
-  if (action !== "login") {
-    return res.status(400).json({ success: false, error: "Invalid GET action" });
-  }
-
-  const lowerEmail = (email || "").toLowerCase().trim();
-  const trimmedPassword = (password || "").trim();
-
-  try {
-    const result = await pool.query(
-      "SELECT id, name, email FROM employee WHERE LOWER(email) = $1 AND password = $2 LIMIT 1",
-      [lowerEmail, trimmedPassword]
-    );
-
-    if (result.rows.length > 0) {
-      const user = result.rows[0];
-      return res.json({ success: true, ...user });
-    } else {
-      return res.json({ success: false, error: "Email hoặc mật khẩu không đúng" });
-    }
-  } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// ========= ✅ POST: Các hành động logEvent, logSession =========
+// ========= ✅ POST: Các hành động Login logEvent, logSession =========
 app.post("/api", async (req, res) => {
   const { action, data } = req.body;
 
@@ -57,6 +29,21 @@ app.post("/api", async (req, res) => {
 
   try {
     switch (action) {
+      case "login":
+        const lowerEmail = (data.email || "").toLowerCase().trim();
+        const trimmedPassword = (data.password || "").trim();
+
+        const result = await pool.query(
+          "SELECT id, name, email FROM employee WHERE LOWER(email) = $1 AND password = $2 LIMIT 1",
+          [lowerEmail, trimmedPassword]
+        );
+
+        if (result.rows.length > 0) {
+          const user = result.rows[0];
+          return res.json({ success: true, ...user });
+        } else {
+          return res.json({ success: false, error: "Email hoặc mật khẩu không đúng" });
+        }
       case "logEvent":
         await pool.query(
           `INSERT INTO events (id, session_id, event_type, event_status, source, timestamp, type)
