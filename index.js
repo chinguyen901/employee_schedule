@@ -127,7 +127,16 @@ app.post("/api", async (req, res) => {
     return res.status(500).json({ success: false, error: err.message });
   }
 });
-
+const createTables = async () => {
+  try {
+    await pool.query(`CREATE TABLE IF NOT EXISTS employee (...);`);
+    // ... thêm các bảng khác ở đây
+    console.log("✅ Tạo bảng thành công!");
+  } catch (err) {
+    console.error("❌ Lỗi tạo bảng:", err.message);
+  }
+};
+createTables();
 // ========= ✅ Khởi động server =========
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
