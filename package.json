@@ -4,8 +4,7 @@
   "description": "Backend server for employee monitoring system using Node.js and PostgreSQL on Railway",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "init-db": "node createTables.js"
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "YourName",
