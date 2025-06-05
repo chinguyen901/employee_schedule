@@ -32,12 +32,13 @@ app.post("/api", async (req, res) => {
       case "login":
         const lowerEmail = (data.email || "").toLowerCase().trim();
         const trimmedPassword = (data.password || "").trim();
-
+        console.log("email:", lowerEmail);
+        console.log("trimmedPassword:", trimmedPassword);
         const result = await pool.query(
           "SELECT id, name, email FROM employee WHERE LOWER(email) = $1 AND password = $2 LIMIT 1",
           [lowerEmail, trimmedPassword]
         );
-
+        console.log("result:", result);
         if (result.rows.length > 0) {
           const user = result.rows[0];
           return res.json({ success: true, ...user });
