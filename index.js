@@ -74,7 +74,7 @@ const server = http.createServer(async (req, res) => {
           data.session_id || "unknown",
           data.email || "unknown",
           data.start_time || new Date().toISOString(),
-          data.end_time || "",
+          data.end_time || null ,
           data.session_status || "active",
           data.device_info || ""
         ]
@@ -90,7 +90,7 @@ const server = http.createServer(async (req, res) => {
         [
           data.session_id || "unknown",
           data.email || "unknown",
-          data.start_time || "",
+          data.start_time || null ,
           data.end_time || new Date().toISOString(),
           data.session_status || "ended",
           data.device_info || ""
