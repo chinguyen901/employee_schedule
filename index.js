@@ -36,7 +36,7 @@ const server = http.createServer(async (req, res) => {
         try {
             const { email, password } = JSON.parse(body);
             const result = await pool.query(
-            'SELECT * FROM employee WHERE email = $1 AND password = $2',
+            'SELECT * FROM employee WHERE email = $2 AND password = $3',
             [email, password]
             );
             if (result.rows.length > 0) {
