@@ -45,8 +45,8 @@ const server = http.createServer(async (req, res) => {
                 'Access-Control-Allow-Origin': '*'
             });
             res.end(JSON.stringify({
-                username: result.rows[0].username,
-                userId: result.rows[0].id
+                name: result.rows[0].name,
+                id: result.rows[0].id
             }));
             } else {
             res.writeHead(401, {
