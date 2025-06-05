@@ -8,7 +8,6 @@ const cors = require("cors");
 
 // Khởi tạo Express app
 const app = express();
-const port = process.env.PORT || 3000;
 
 // Cấu hình middleware
 app.use(cors());
