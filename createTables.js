@@ -1,16 +1,19 @@
 // createTables.js
 
+// Bắt buộc để nạp biến từ .env
+require("dotenv").config();
+
 const { Pool } = require("pg");
 
-// Kết nối đến Railway PostgreSQL qua DATABASE_URL
+// Kết nối tới PostgreSQL sử dụng DATABASE_URL từ .env
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false } // Railway yêu cầu SSL
 });
 
 const createTables = async () => {
   try {
-    console.log("Đang tạo các bảng...");
+    console.log("🔧 Đang tạo các bảng...");
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS employee (
@@ -48,7 +51,7 @@ const createTables = async () => {
       );
     `);
 
-    console.log("✅ Đã tạo các bảng thành công!");
+    console.log("✅ Tạo bảng thành công!");
   } catch (error) {
     console.error("❌ Lỗi khi tạo bảng:", error.message);
   } finally {
