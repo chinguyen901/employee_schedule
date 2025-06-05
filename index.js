@@ -22,7 +22,7 @@ const pool = new Pool({
 // ========= ✅ POST: Các hành động Login logEvent, logSession =========
 app.post("/api", async (req, res) => {
   const { action, data } = req.body;
-
+  console.log("HELLO TAO VO ROI");
   if (!action || !data) {
     return res.status(400).json({ success: false, error: "Thiếu 'action' hoặc 'data'" });
   }
