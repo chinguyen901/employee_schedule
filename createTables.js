@@ -1,59 +1,81 @@
 // createTables.js
-
-// Bắt buộc để nạp biến từ .env
 require("dotenv").config();
-
 const { Pool } = require("pg");
 
-// Kết nối tới PostgreSQL sử dụng DATABASE_URL từ .env
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false } // Railway yêu cầu SSL
+  ssl: { rejectUnauthorized: false }
 });
 
 const createTables = async () => {
   try {
-    console.log("🔧 Đang tạo các bảng...");
-
+    console.log("🧨 Xoá bảng cũ nếu tồn tại...");
     await pool.query(`
-      CREATE TABLE IF NOT EXISTS employee (
-        id SERIAL PRIMARY KEY,
-        name TEXT,
-        email TEXT UNIQUE,
-        password TEXT
+      DROP TABLE IF EXISTS 
+        photo_sessions,
+        work_sessions,
+        break_sessions,
+        distraction_sessions,
+        incident_sessions,
+        accounts 
+      CASCADE;
+    `);
+
+    console.log("🔧 Tạo bảng mới...");
+    await pool.query(`
+      CREATE TABLE accounts (
+        account_id     SERIAL PRIMARY KEY,
+        username       VARCHAR(50) NOT NULL UNIQUE,
+        password       VARCHAR(100) NOT NULL,
+        employee_code  VARCHAR(20) NOT NULL UNIQUE,
+        full_name      VARCHAR(100) NOT NULL,
+        type           VARCHAR(20) CHECK (type IN ('seo online', 'copy writer', 'linkbuilder', 'dev')) NOT NULL,
+        random_from    INT DEFAULT 300,
+        random_to      INT DEFAULT 600,
+        created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE IF NOT EXISTS events (
-        id TEXT,
-        session_id TEXT,
-        event_type TEXT,
-        event_status TEXT,
-        source TEXT,
-        timestamp TIMESTAMP,
-        type TEXT
+      CREATE TABLE photo_sessions (
+        photo_id     SERIAL PRIMARY KEY,
+        account_id   INT NOT NULL REFERENCES accounts(account_id),
+        hash         VARCHAR(255) NOT NULL,
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE IF NOT EXISTS session (
-        session_id TEXT,
-        email TEXT,
-        start_time TIMESTAMP,
-        end_time TIMESTAMP,
-        session_status TEXT,
-        device_info TEXT
+      CREATE TABLE work_sessions (
+        session_id   SERIAL PRIMARY KEY,
+        account_id   INT NOT NULL REFERENCES accounts(account_id),
+        status       VARCHAR(10) CHECK (status IN ('checkin', 'checkout')) NOT NULL,
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE IF NOT EXISTS log (
-        id TEXT,
-        name TEXT,
-        hash TEXT,
-        session_id TEXT,
-        timestamp TIMESTAMP
+      CREATE TABLE break_sessions (
+        break_id     SERIAL PRIMARY KEY,
+        account_id   INT NOT NULL REFERENCES accounts(account_id),
+        status       VARCHAR(15) CHECK (status IN ('break_start', 'break_end')) NOT NULL,
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE distraction_sessions (
+        distraction_id   SERIAL PRIMARY KEY,
+        account_id       INT NOT NULL REFERENCES accounts(account_id),
+        status           VARCHAR(10) CHECK (status IN ('start', 'end')) NOT NULL,
+        note             TEXT,
+        created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE incident_sessions (
+        incident_id  SERIAL PRIMARY KEY,
+        account_id   INT NOT NULL REFERENCES accounts(account_id),
+        status       VARCHAR(255) NOT NULL,
+        reason       TEXT,
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
-    console.log("✅ Tạo bảng thành công!");
-  } catch (error) {
-    console.error("❌ Lỗi khi tạo bảng:", error.message);
+    console.log("✅ Đã tạo lại toàn bộ bảng thành công!");
+  } catch (err) {
+    console.error("❌ Lỗi khi tạo bảng:", err.message);
   } finally {
     await pool.end();
   }
