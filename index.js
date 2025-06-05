@@ -129,7 +129,7 @@ app.post("/api", async (req, res) => {
 });
 const createTables = async () => {
   try {
-    await pool.query(`CREATE TABLE IF NOT EXISTS employee (...);`);
+    console.log("🔧 Đang tạo các bảng...");
     await pool.query(`
       CREATE TABLE IF NOT EXISTS employee (
         id SERIAL PRIMARY KEY,
