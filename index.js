@@ -47,7 +47,7 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    else if (req.method === 'POST' && path === '/logEvent') {
+    else if (req.method === 'POST' && path === '/log-event') {
       const data = await parseBody(req);
       await pool.query(
         `INSERT INTO events (id, session_id, event_type, event_status, source, timestamp, type)
@@ -65,7 +65,7 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ success: true }));
     }
 
-    else if (req.method === 'POST' && path === '/logSession') {
+    else if (req.method === 'POST' && path === '/log-session') {
       const data = await parseBody(req);
       await pool.query(
         `INSERT INTO session (session_id, email, start_time, end_time, session_status, device_info)
@@ -82,7 +82,7 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ success: true }));
     }
 
-    else if (req.method === 'POST' && path === '/logSession_out') {
+    else if (req.method === 'POST' && path === '/log-session-out') {
       const data = await parseBody(req);
       await pool.query(
         `INSERT INTO session (session_id, email, start_time, end_time, session_status, device_info)
@@ -99,7 +99,7 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify({ success: true }));
     }
 
-    else if (req.method === 'POST' && path === '/logScreenshot') {
+    else if (req.method === 'POST' && path === '/log-screenshot') {
       const data = await parseBody(req);
       await pool.query(
         `INSERT INTO log (id, name, hash, session_id, timestamp)
