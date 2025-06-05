@@ -1,6 +1,6 @@
 // createTables.js
-require("dotenv").config();
-const { Pool } = require("pg");
+require('dotenv').config();
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -9,21 +9,10 @@ const pool = new Pool({
 
 const createTables = async () => {
   try {
-    console.log("🧨 Xoá bảng cũ nếu tồn tại...");
-    await pool.query(`
-      DROP TABLE IF EXISTS 
-        photo_sessions,
-        work_sessions,
-        break_sessions,
-        distraction_sessions,
-        incident_sessions,
-        accounts 
-      CASCADE;
-    `);
+    console.log('🛠️ Đang kiểm tra và tạo các bảng nếu cần...');
 
-    console.log("🔧 Tạo bảng mới...");
     await pool.query(`
-      CREATE TABLE accounts (
+      CREATE TABLE IF NOT EXISTS accounts (
         account_id     SERIAL PRIMARY KEY,
         username       VARCHAR(50) NOT NULL UNIQUE,
         password       VARCHAR(100) NOT NULL,
@@ -35,36 +24,36 @@ const createTables = async () => {
         created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE photo_sessions (
+      CREATE TABLE IF NOT EXISTS photo_sessions (
         photo_id     SERIAL PRIMARY KEY,
         account_id   INT NOT NULL REFERENCES accounts(account_id),
         hash         VARCHAR(255) NOT NULL,
         created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE work_sessions (
+      CREATE TABLE IF NOT EXISTS work_sessions (
         session_id   SERIAL PRIMARY KEY,
         account_id   INT NOT NULL REFERENCES accounts(account_id),
-        status       VARCHAR(10) CHECK (status IN ('checkin', 'checkout')) NOT NULL,
+        status       VARCHAR(20) CHECK (status IN ('checkin', 'checkout')) NOT NULL,
         created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE break_sessions (
+      CREATE TABLE IF NOT EXISTS break_sessions (
         break_id     SERIAL PRIMARY KEY,
         account_id   INT NOT NULL REFERENCES accounts(account_id),
-        status       VARCHAR(15) CHECK (status IN ('break_start', 'break_end')) NOT NULL,
+        status       VARCHAR(20) CHECK (status IN ('break_start', 'break_end')) NOT NULL,
         created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE distraction_sessions (
+      CREATE TABLE IF NOT EXISTS distraction_sessions (
         distraction_id   SERIAL PRIMARY KEY,
         account_id       INT NOT NULL REFERENCES accounts(account_id),
-        status           VARCHAR(10) CHECK (status IN ('start', 'end')) NOT NULL,
+        status           VARCHAR(20) CHECK (status IN ('start', 'end')) NOT NULL,
         note             TEXT,
         created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE incident_sessions (
+      CREATE TABLE IF NOT EXISTS incident_sessions (
         incident_id  SERIAL PRIMARY KEY,
         account_id   INT NOT NULL REFERENCES accounts(account_id),
         status       VARCHAR(255) NOT NULL,
@@ -73,12 +62,10 @@ const createTables = async () => {
       );
     `);
 
-    console.log("✅ Đã tạo lại toàn bộ bảng thành công!");
-  } catch (err) {
-    console.error("❌ Lỗi khi tạo bảng:", err.message);
-  } finally {
-    await pool.end();
+    console.log('✅ Đã tạo bảng (nếu chưa tồn tại).');
+  } catch (error) {
+    console.error('❌ Lỗi khi tạo bảng:', error.message);
   }
 };
 
-createTables();
+module.exports = createTables;
