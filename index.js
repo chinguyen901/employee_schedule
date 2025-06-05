@@ -30,37 +30,21 @@ const server = http.createServer(async (req, res) => {
 
   try {
     if (req.method === 'POST' && path === '/login') {
-      let body = '';
-        req.on('data', chunk => body += chunk);
-        req.on('end', async () => {
-        try {
-            const { email, password } = JSON.parse(body);
-            const result = await pool.query(
-            'SELECT * FROM employee WHERE email = $1 AND password = $2',
-            [email, password]
-            );
-            if (result.rows.length > 0) {
-            res.writeHead(200, {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            });
-            res.end(JSON.stringify({
-                name: result.rows[0].name,
-                id: result.rows[0].id
-            }));
-            } else {
-            res.writeHead(401, {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            });
-            res.end(JSON.stringify({ error: 'Invalid credentials' }));
-            }
-        } catch (err) {
-            console.error(err);
-            res.writeHead(500, { 'Access-Control-Allow-Origin': '*' });
-            res.end('Server error');
-        }
-        });
+      const { email, password } = await parseBody(req);
+      const lowerEmail = (email || '').toLowerCase().trim();
+      const trimmedPassword = (password || '').trim();
+
+      const result = await pool.query(
+        'SELECT id, name FROM employee WHERE LOWER(email) = $1 AND password = $2',
+        [lowerEmail, trimmedPassword]
+      );
+      console.log(`✅ result.rows.length:${result.rows.length}`);
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        return res.end(JSON.stringify({ success: true, ...user }));
+      } else {
+        return res.end(JSON.stringify({ success: false, error: 'Email hoặc mật khẩu không đúng' }));
+      }
     }
 
     else if (req.method === 'POST' && path === '/logEvent') {
