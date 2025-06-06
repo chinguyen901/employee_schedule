@@ -48,7 +48,7 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS distraction_sessions (
         distraction_id   SERIAL PRIMARY KEY,
         account_id       INT NOT NULL REFERENCES accounts(account_id),
-        status           VARCHAR(20) CHECK (status IN ('start', 'end')) NOT NULL,
+        status           VARCHAR(20) NOT NULL,
         note             TEXT,
         created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
