@@ -102,6 +102,16 @@ const startServer = () => {
         );
         return res.end(JSON.stringify({ success: true }));
       }
+              // Xử lý log break (checkin - checkout)
+      else if (req.method === 'POST' && path === '/log-distraction') {
+        const data = await parseBody(req);
+        await pool.query(
+          `INSERT INTO distraction_sessions (account_id, status, note, created_at)
+          VALUES ($1, $2, $3, $4)`,
+          [data.account_id, data.status || 'unknown',data.note, new Date()]
+        );
+        return res.end(JSON.stringify({ success: true }));
+      }
 
       // Xử lý log in/out
       else if (req.method === 'POST' && path === '/log-loginout') {
