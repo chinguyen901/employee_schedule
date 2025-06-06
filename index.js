@@ -78,12 +78,18 @@ const startServer = () => {
       // Xử lý log session (checkin - checkout)
       else if (req.method === 'POST' && path === '/log-work') {
         const data = await parseBody(req);
-        await pool.query(
-          `INSERT INTO work_sessions (account_id, status, created_at)
-           VALUES ($1, $2, $3)`,
-          [data.account_id,data.status || 'unknown', new Date()]
-        );
-        return res.end(JSON.stringify({ success: true }));
+        try {
+          await pool.query(
+            `INSERT INTO work_sessions (account_id, status, created_at)
+            VALUES ($1, $2, $3)`,
+            [data.account_id, data.status || 'unknown', new Date()]
+          );
+          return res.end(JSON.stringify({ success: true }));
+        } catch (error) {
+          console.error("DB insert error:", error);
+          res.statusCode = 500;
+          return res.end(JSON.stringify({ success: false, error: error.message }));
+        }
       }
 
       // Xử lý log break (checkin - checkout)
