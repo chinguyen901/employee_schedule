@@ -63,8 +63,9 @@ const startServer = () => {
         }
       }
 
-      // Xử lý log event
-      else if (req.method === 'POST' && path === '/log-event') {
+
+      // Log incident sessions ( SUDDEN + Checkin Again)
+      else if (req.method === 'POST' && path === '/log-incident') {
         const data = await parseBody(req);
         await pool.query(
           `INSERT INTO incident_sessions (account_id, status, reason, created_at)
@@ -74,24 +75,35 @@ const startServer = () => {
         return res.end(JSON.stringify({ success: true }));
       }
 
-      // Xử lý log session (checkin)
-      else if (req.method === 'POST' && path === '/log-session') {
+      // Xử lý log session (checkin - checkout)
+      else if (req.method === 'POST' && path === '/log-work') {
         const data = await parseBody(req);
         await pool.query(
           `INSERT INTO work_sessions (account_id, status, created_at)
-           VALUES ($1, 'checkin', $2)`,
-          [data.account_id, new Date()]
+           VALUES ($1, $2, $3)`,
+          [data.account_id,data.status || 'unknown', new Date()]
         );
         return res.end(JSON.stringify({ success: true }));
       }
 
-      // Xử lý log session (checkout)
-      else if (req.method === 'POST' && path === '/log-session-out') {
+      // Xử lý log break (checkin - checkout)
+      else if (req.method === 'POST' && path === '/log-break') {
         const data = await parseBody(req);
         await pool.query(
-          `INSERT INTO work_sessions (account_id, status, created_at)
-           VALUES ($1, 'checkout', $2)`,
-          [data.account_id, new Date()]
+          `INSERT INTO break_sessions (account_id, status, created_at)
+          VALUES ($1, $2, $3)`,
+          [data.account_id, data.status || 'unknown', new Date()]
+        );
+        return res.end(JSON.stringify({ success: true }));
+      }
+
+      // Xử lý log in/out
+      else if (req.method === 'POST' && path === '/log-loginout') {
+        const data = await parseBody(req);
+        await pool.query(
+          `INSERT INTO login_logout_session (account_id, status, created_at)
+          VALUES ($1, $2, $3)`,
+          [data.account_id, data.status || 'logout', new Date()]
         );
         return res.end(JSON.stringify({ success: true }));
       }
